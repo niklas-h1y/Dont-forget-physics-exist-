@@ -1,16 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Webpage Gravity Chaos",
+  "name": "Webpage Gravity Control",
   "version": "1.0",
-  "description": "Makes all elements on any website break free and crash to the bottom of the screen!",
+  "description": "Control custom 2D gravity physics on any website through a popup panel!",
   "permissions": [
     "activeTab",
     "scripting"
   ],
-  "background": {
-    "service_worker": "background.js"
-  },
   "action": {
-    "default_title": "Trigger Gravity!"
+    "default_popup": "popup.html",
+    "default_title": "Open Gravity Panel"
   }
 }
