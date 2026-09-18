@@ -52,7 +52,6 @@
               });
             };
 
-            // Touchstart für Mobilgeräte und Pointerover für Desktop-Modus
             letterSpan.addEventListener('pointerover', activateTrigger, { passive: true });
             letterSpan.addEventListener('touchstart', activateTrigger, { passive: true });
           }
@@ -157,14 +156,11 @@
     requestAnimationFrame(runPhysicsLoop);
   }
 
-  // Diese Funktion wartet jetzt intelligent, bis GitHub echten Inhalt geladen hat
   function startEngineWhenReady() {
-    // Sobald sich Elemente im DOM befinden, legen wir los
     if (document.body && document.body.childNodes.length > 0) {
       shatterElementsIntoLetters(document.body);
       requestAnimationFrame(runPhysicsLoop);
 
-      // Beobachtet den dynamischen Seitenaufbau
       const pageObserver = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
           for (const node of mutation.addedNodes) {
@@ -174,14 +170,11 @@
       });
       pageObserver.observe(document.body, { childList: true, subtree: true });
     } else {
-      // Wenn das Dokument noch leer ist, prüfen wir es in 50ms erneut
       setTimeout(startEngineWhenReady, 50);
     }
   }
 
-  // Nur auf GitHub aktivieren
   if (window.location.hostname.includes('github.com')) {
-    // Startet die Warteschleife, sobald die DOM-Struktur initialisiert wird
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', startEngineWhenReady);
     } else {
@@ -189,9 +182,10 @@
     }
   }
 
-  window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'TOGGLE_PHYSICS') {
-      trackingActive = event.data.enabled;
+  // Hört auf die neue mobile-freundliche Message-Schnittstelle
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message && message.type === 'TOGGLE_PHYSICS') {
+      trackingActive = message.enabled;
     }
   });
 })();
