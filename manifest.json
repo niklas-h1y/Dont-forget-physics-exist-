@@ -1,17 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Dont forget physics exist",
-  "version": "1.0.5",
-  "description": "Turns every element and text character on GitHub into dynamic, gravity-bound physics particles.",
-  "permissions": ["storage", "tabs"],
-  "content_scripts": [
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
-      "run_at": "document_start"
-    }
+  "name": "Webpage Gravity Chaos",
+  "version": "1.0",
+  "description": "Makes all elements on any website break free and crash to the bottom of the screen!",
+  "permissions": [
+    "activeTab",
+    "scripting"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_popup": "popup.html"
+    "default_title": "Trigger Gravity!"
   }
 }
