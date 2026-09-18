@@ -9,67 +9,68 @@
   function shatterElementsIntoLetters(element) {
     if (!element) return;
     
-    if (element.nodeType === Node.TEXT_NODE && element.textContent.trim().length > 0) {
-      const parent = element.parentNode;
-      if (parent && parent.hasAttribute(SCANNED_MARKER)) return;
+    try {
+      if (element.nodeType === Node.TEXT_NODE && element.textContent.trim().length > 0) {
+        const parent = element.parentNode;
+        if (!parent || parent.hasAttribute(SCANNED_MARKER)) return;
+        if (parent.closest && parent.closest('.cm-editor, .commit-create, form, input, textarea')) return;
 
-      const textContent = element.textContent;
-      const fragments = document.createDocumentFragment();
+        const textContent = element.textContent;
+        const fragments = document.createDocumentFragment();
 
-      for (let i = 0; i < textContent.length; i++) {
-        const letterSpan = document.createElement('span');
-        letterSpan.textContent = textContent[i];
-        letterSpan.style.display = 'inline-block';
-        letterSpan.style.whiteSpace = 'pre';
-        letterSpan.style.transition = 'none';
+        for (let i = 0; i < textContent.length; i++) {
+          const letterSpan = document.createElement('span');
+          letterSpan.textContent = textContent[i];
+          letterSpan.style.display = 'inline-block';
+          letterSpan.style.whiteSpace = 'pre';
+          letterSpan.style.transition = 'none';
 
-        if (textContent[i] !== ' ' && textContent[i] !== '\n') {
-          const activateTrigger = (e) => {
-            if (!trackingActive) return;
-            letterSpan.removeEventListener('pointerover', activateTrigger);
-            letterSpan.removeEventListener('touchstart', activateTrigger);
+          if (textContent[i] !== ' ' && textContent[i] !== '\n') {
+            const activateTrigger = (e) => {
+              if (!trackingActive) return;
+              letterSpan.removeEventListener('pointerover', activateTrigger);
+              letterSpan.removeEventListener('touchstart', activateTrigger);
 
-            const bounds = letterSpan.getBoundingClientRect();
-            
-            letterSpan.style.position = 'fixed';
-            letterSpan.style.left = `${bounds.left}px`;
-            letterSpan.style.top = `${bounds.top}px`;
-            letterSpan.style.width = `${bounds.width}px`;
-            letterSpan.style.height = `${bounds.height}px`;
-            letterSpan.style.zIndex = '2147483647';
-            letterSpan.style.pointerEvents = 'none';
+              const bounds = letterSpan.getBoundingClientRect();
+              
+              letterSpan.style.position = 'fixed';
+              letterSpan.style.left = `${bounds.left}px`;
+              letterSpan.style.top = `${bounds.top}px`;
+              letterSpan.style.width = `${bounds.width}px`;
+              letterSpan.style.height = `${bounds.height}px`;
+              letterSpan.style.zIndex = '2147483647';
+              letterSpan.style.pointerEvents = 'none';
 
-            physicsParticles.push({
-              domElement: letterSpan,
-              posX: bounds.left,
-              posY: bounds.top,
-              velX: (Math.random() - 0.5) * 6,
-              velY: (Math.random() * -3) - 2,
-              width: bounds.width,
-              height: bounds.height
-            });
-          };
+              physicsParticles.push({
+                domElement: letterSpan,
+                posX: bounds.left,
+                posY: bounds.top,
+                velX: (Math.random() - 0.5) * 6,
+                velY: (Math.random() * -3) - 2,
+                width: bounds.width,
+                height: bounds.height
+              });
+            };
 
-          letterSpan.addEventListener('pointerover', activateTrigger, { passive: true });
-          letterSpan.addEventListener('touchstart', activateTrigger, { passive: true });
+            letterSpan.addEventListener('pointerover', activateTrigger, { passive: true });
+            letterSpan.addEventListener('touchstart', activateTrigger, { passive: true });
+          }
+          fragments.appendChild(letterSpan);
         }
-        fragments.appendChild(letterSpan);
-      }
-      
-      if (parent) {
+        
         parent.setAttribute(SCANNED_MARKER, 'true');
         parent.replaceChild(fragments, element);
-      }
-    } else {
-      const ignoredTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'SVG', 'CODE', 'CANVAS'];
-      if (!ignoredTags.includes(element.nodeName) && element.nodeType === Node.ELEMENT_NODE) {
-        if (element.hasAttribute(SCANNED_MARKER)) return;
-        const children = Array.from(element.childNodes);
-        for (let i = children.length - 1; i >= 0; i--) {
-          shatterElementsIntoLetters(children[i]);
+      } else {
+        const ignoredTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'SVG', 'CODE', 'CANVAS'];
+        if (!ignoredTags.includes(element.nodeName) && element.nodeType === Node.ELEMENT_NODE) {
+          if (element.hasAttribute(SCANNED_MARKER)) return;
+          const children = Array.from(element.childNodes);
+          for (let i = children.length - 1; i >= 0; i--) {
+            shatterElementsIntoLetters(children[i]);
+          }
         }
       }
-    }
+    } catch (e) {}
   }
 
   function resolveParticleCollisions() {
@@ -155,17 +156,29 @@
     requestAnimationFrame(runPhysicsLoop);
   }
 
-  shatterElementsIntoLetters(document.body);
-  requestAnimationFrame(runPhysicsLoop);
+  // Wartet, bis die Seite auf GitHub existiert (wichtig für document_start)
+  function initEngine() {
+    if (document.body) {
+      shatterElementsIntoLetters(document.body);
+      requestAnimationFrame(runPhysicsLoop);
 
-  const pageObserver = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
-        shatterElementsIntoLetters(node);
-      }
+      const pageObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            shatterElementsIntoLetters(node);
+          }
+        }
+      });
+      pageObserver.observe(document.body, { childList: true, subtree: true });
+    } else {
+      setTimeout(initEngine, 10);
     }
-  });
-  pageObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // Zündet die Engine, sobald wir auf GitHub sind
+  if (window.location.hostname.includes('github.com')) {
+    initEngine();
+  }
 
   window.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'TOGGLE_PHYSICS') {
