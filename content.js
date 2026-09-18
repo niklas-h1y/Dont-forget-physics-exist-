@@ -4,8 +4,6 @@
   const BOUNCE_LOSS = 0.5;
   const physicsParticles = [];
   let trackingActive = true;
-
-  // Thread-safe flag to avoid processing items twice
   const SCANNED_MARKER = 'data-shattered';
 
   function shatterElementsIntoLetters(element) {
@@ -66,8 +64,6 @@
       const ignoredTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'SVG', 'CODE', 'CANVAS'];
       if (!ignoredTags.includes(element.nodeName) && element.nodeType === Node.ELEMENT_NODE) {
         if (element.hasAttribute(SCANNED_MARKER)) return;
-        
-        // Loop backward safely since DOM trees change dynamically
         const children = Array.from(element.childNodes);
         for (let i = children.length - 1; i >= 0; i--) {
           shatterElementsIntoLetters(children[i]);
@@ -124,13 +120,11 @@
   }
 
   function runPhysicsLoop() {
-    // Dynamic boundary tracking fixes Bug #2 (screen sizing and scrolling)
     const viewHeight = window.innerHeight;
     const viewWidth = window.innerWidth;
 
     for (let i = 0; i < physicsParticles.length; i++) {
       const p = physicsParticles[i];
-      
       p.velY += GRAVITY;
       p.posX += p.velX;
       p.posY += p.velY;
@@ -161,11 +155,9 @@
     requestAnimationFrame(runPhysicsLoop);
   }
 
-  // Initialize processing
   shatterElementsIntoLetters(document.body);
   requestAnimationFrame(runPhysicsLoop);
 
-  // Fix Bug #1: Observe dynamic SPA updates from GitHub AJAX engine
   const pageObserver = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
