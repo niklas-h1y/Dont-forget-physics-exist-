@@ -3,7 +3,7 @@
   const FRICTION = 0.8;
   const BOUNCE_LOSS = 0.5;
   const physicsParticles = [];
-  let trackingActive = true;
+  let trackingActive = false; // Startet standardmäßig sicher im Hintergrund
   const SCANNED_MARKER = 'data-shattered';
 
   function shatterElementsIntoLetters(element) {
@@ -52,7 +52,6 @@
               });
             };
 
-            // Hört auf Wischen/Tippen am Handy und Mausbewegung am PC
             letterSpan.addEventListener('pointerover', activateTrigger, { passive: true });
             letterSpan.addEventListener('touchstart', activateTrigger, { passive: true });
           }
@@ -157,23 +156,25 @@
     requestAnimationFrame(runPhysicsLoop);
   }
 
-  // Zündet die Engine sauber, sobald das Dokument vollständig geladen ist
   function initEngine() {
-    shatterElementsIntoLetters(document.body);
-    requestAnimationFrame(runPhysicsLoop);
+    // Prüft den Zustand in der Datenbank vor der Zerstörung des DOM
+    chrome.storage.local.get(['physicsEnabled'], (result) => {
+      trackingActive = result.physicsEnabled !== undefined ? result.physicsEnabled : false;
+      
+      shatterElementsIntoLetters(document.body);
+      requestAnimationFrame(runPhysicsLoop);
 
-    // MutationObserver fängt dynamische Klicks ab, während du auf GitHub surfst
-    const pageObserver = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          shatterElementsIntoLetters(node);
+      const pageObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            shatterElementsIntoLetters(node);
+          }
         }
-      }
+      });
+      pageObserver.observe(document.body, { childList: true, subtree: true });
     });
-    pageObserver.observe(document.body, { childList: true, subtree: true });
   }
 
-  // Klinkt sich sicher in den Browser-Lebenszyklus ein
   if (document.readyState === 'complete') {
     initEngine();
   } else {
