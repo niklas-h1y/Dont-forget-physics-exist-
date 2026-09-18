@@ -11,14 +11,11 @@ toggleBtn.addEventListener('click', async () => {
     toggleBtn.classList.add('disabled');
   }
 
+  // Nutzt sendMessage anstelle des blockierten executeScript
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab?.id) {
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (status) => {
-        window.postMessage({ type: 'TOGGLE_PHYSICS', enabled: status }, '*');
-      },
-      args: [isRunning]
+    chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_PHYSICS', enabled: isRunning }).catch(() => {
+      // Ignoriert Fehler, falls die Seite noch lädt
     });
   }
 });
