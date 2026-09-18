@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "GitHub Element Physics Engine",
+  "name": "Dont forget physics exist",
   "version": "1.0.0",
-  "description": "Turns every singular element and text character on GitHub into dynamic, gravity-bound physics particles.",
+  "description": "Turns every element and text character on GitHub into dynamic, gravity-bound physics particles.",
   "permissions": ["activeTab", "scripting"],
   "action": {
     "default_popup": "popup.html"
