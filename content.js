@@ -52,6 +52,7 @@
               });
             };
 
+            // Hört auf Wischen/Tippen am Handy und Mausbewegung am PC
             letterSpan.addEventListener('pointerover', activateTrigger, { passive: true });
             letterSpan.addEventListener('touchstart', activateTrigger, { passive: true });
           }
@@ -156,33 +157,29 @@
     requestAnimationFrame(runPhysicsLoop);
   }
 
-  function startEngineWhenReady() {
-    if (document.body && document.body.childNodes.length > 0) {
-      shatterElementsIntoLetters(document.body);
-      requestAnimationFrame(runPhysicsLoop);
+  // Zündet die Engine sauber, sobald das Dokument vollständig geladen ist
+  function initEngine() {
+    shatterElementsIntoLetters(document.body);
+    requestAnimationFrame(runPhysicsLoop);
 
-      const pageObserver = new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-          for (const node of mutation.addedNodes) {
-            shatterElementsIntoLetters(node);
-          }
+    // MutationObserver fängt dynamische Klicks ab, während du auf GitHub surfst
+    const pageObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          shatterElementsIntoLetters(node);
         }
-      });
-      pageObserver.observe(document.body, { childList: true, subtree: true });
-    } else {
-      setTimeout(startEngineWhenReady, 50);
-    }
+      }
+    });
+    pageObserver.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (window.location.hostname.includes('github.com')) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', startEngineWhenReady);
-    } else {
-      startEngineWhenReady();
-    }
+  // Klinkt sich sicher in den Browser-Lebenszyklus ein
+  if (document.readyState === 'complete') {
+    initEngine();
+  } else {
+    window.addEventListener('load', initEngine);
   }
 
-  // Hört auf die neue mobile-freundliche Message-Schnittstelle
   chrome.runtime.onMessage.addListener((message) => {
     if (message && message.type === 'TOGGLE_PHYSICS') {
       trackingActive = message.enabled;
